@@ -74,3 +74,38 @@ resource "aws_route_table_association" "public_rt_association" {
   subnet_id      = "${aws_subnet.public-1a.id}"
   route_table_id = "${aws_route_table.public_route_table.id}"
 }
+
+# Create an EIP for the NAT Gateway for our private subnets
+resource "aws_eip" "nat_eip" {
+  vpc = true
+  depends_on = ["aws_internet_gateway.myigw"]
+}
+
+# NAT Gateway
+resource "aws_nat_gateway" "natgw" {
+  allocation_id = "${aws_eip.nat_eip.id}"
+  subnet_id     = "${aws_subnet.public-1a.id}"
+}
+
+# Create a private route table
+resource "aws_route_table" "private_route_table" {
+  vpc_id = "${aws_vpc.myvpc.id}"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_nat_gateway.natgw.id}"
+  }
+  tags{
+    Name = "Private Route Table"
+  }
+}
+
+# Associate the private route table with the 2 private subnets
+resource "aws_route_table_association" "private_rt_association_1a" {
+  subnet_id      = "${aws_subnet.private-1a.id}"
+  route_table_id = "${aws_route_table.private_route_table.id}"
+}
+
+resource "aws_route_table_association" "private_rt_association_1d" {
+  subnet_id      = "${aws_subnet.private-1d.id}"
+  route_table_id = "${aws_route_table.private_route_table.id}"
+}
