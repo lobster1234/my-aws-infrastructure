@@ -1,0 +1,24 @@
+{
+  "builders": [
+    {
+    "type": "amazon-ebs",
+    "communicator": "ssh",
+    "region": "us-east-1",
+    "source_ami" : "ami-cad827b7",
+    "instance_type": "t2.micro",
+    "ami_name": "ecs-with-filebeat {{timestamp}}",
+    "ssh_username" : "ec2-user"
+   }
+],
+  "provisioners" : [
+  {
+      "type" : "file",
+      "source" : "filebeat.yml",
+      "destination" : "/tmp/filebeat.yml"
+  },
+  {
+      "type": "shell",
+      "script": "filebeat.sh"
+  }
+]
+}
